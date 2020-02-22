@@ -13,19 +13,16 @@ solvable = False
 _cubeString = ''
 solveString = 'Solve String'
 
-
 #main loop:
 while True:
 	ui.update(solveString)
 	
-	cubeString = str(input()) #Fetch from cameras
-	
+	cubeString = 'LRFFURUDLDULFRBBLRLFBLFLBDRRRDRDUULFUUBBLDFFUDBFDBUDBR' #this should be fetched from the camera
+
 	#  LRFFURUDLDULFRBBLRLFBLFLBDRRRDRDUULFUUBBLDFFUDBFDBUDBR   
-	#  RDBDUDDUDBFLBRRRUULLLBFUBLFRDDUDFLRFBBFLLLFRUURDBBFRFU		-known correct scrambles
+	#  RDBDUDDUDBFLBRRRUULLLBFUBLFRDDUDFLRFBBFLLLFRUURDBBFRFU	-known correct scrambles
 	
 	if _cubeString != cubeString: #if new cube string
-		print("Cube string update, solving: ")
-		
 		start_time = time.time()
 		solveString = sv.solve(cubeString, 20, 1)
 		elapsed_time = time.time() - start_time
@@ -37,5 +34,3 @@ while True:
 			print("Solved!, Solve time: " + str(elapsed_time))
 			
 		_cubeString = cubeString
-		
-	time.sleep(0.1)
