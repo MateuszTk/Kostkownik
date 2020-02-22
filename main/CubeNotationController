@@ -1,0 +1,39 @@
+from pyax12.connection import Connection
+import time
+
+# Connect to the serial port
+serial_connection = Connection(port="/dev/ttyUSB0", baudrate=1000000)
+
+# A 125 B -150 C -60 D 30
+
+
+def ResetMotor():
+	motorPosition = 125
+	
+	serial_connection.goto(motorId, motorPosition, speed=512, degrees=True)
+	time.sleep(1)
+	
+def ClockWise():
+	motorPosition += 90
+	if motorPosition == 215:
+		motorPosition = -150
+		
+	serial_connection.goto(motorId, motorPosition, speed=512, degrees=True)
+	time.sleep(1)
+	
+def CounterClockWise():
+	motorPosition -= 90
+	if motorPosition == -240:
+		motorPosition = 30
+		
+	serial_connection.goto(motorId, motorPosition, speed=512, degrees=True)
+	time.sleep(1)
+
+motorId = 2
+
+ResetMotor():
+
+
+# Close the serial connection
+serial_connection.close()
+
