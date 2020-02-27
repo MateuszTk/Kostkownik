@@ -12,7 +12,6 @@ def startKamery():
 	global vs
 	vs = VideoStream(src=0).start()
 
-	# Proba ustawiania paremtrow kamerki
 	vs.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0) 
 	vs.stream.set(cv2.CAP_PROP_AUTO_WB, 0) 
 	vs.stream.set(cv2.CAP_PROP_GAIN, 1) 
@@ -55,9 +54,36 @@ while True:
 	if frame is None:
 		break
 	
-	for a in range(0, 3):
-		for b in range(0, 3):
-			drawCircle(a * 140 + 100, b * 140 + 100)
+	
+	if key == ord("r"):	
+		kolory[2] = wykryjObiekt(frame, 240, 240)
+		print(colorStr[2])
+		print(kolory[2])
+	
+	if key == ord("o"):	
+		kolory[4] = wykryjObiekt(frame, 240, 240)
+		print(colorStr[4])
+		print(kolory[4])
+		
+	if key == ord("b"):	
+		kolory[0] = wykryjObiekt(frame, 240, 240)
+		print(colorStr[0])
+		print(kolory[0])
+		
+	if key == ord("g"):	
+		kolory[1] = wykryjObiekt(frame, 240, 240)
+		print(colorStr[1])
+		print(kolory[1])
+		
+	if key == ord("y"):	
+		kolory[3] = wykryjObiekt(frame, 240, 240)
+		print(colorStr[3])
+		print(kolory[3])
+		
+	if key == ord("w"):	
+		kolory[5] = wykryjObiekt(frame, 240, 240)
+		print(colorStr[5])
+		print(kolory[5])
 		
 	if key == ord("c"):
 		for x in range(0, 3):
@@ -67,16 +93,16 @@ while True:
 				color = wykryjObiekt(frame, x * 140 + 100, y * 140 + 100)	
 				for k in range(0, 6):
 					kolor = abs(color[0] - kolory[k][0]) + abs(color[1] - kolory[k][1]) + abs(color[2] - kolory[k][2])
-					#print(kolor)
 					if kolor < najb:
 						najb = kolor
 						najbKolor = k
 				result[x][y] = colorStr[najbKolor]
-				#print(colorStr[najbKolor])
 			
 		#print(color)
 		print(result)
-		
+	for a in range(0, 3):
+		for b in range(0, 3):
+			drawCircle(a * 140 + 100, b * 140 + 100)	
 	cv2.imshow("Frame", frame)
 	
  	# if the 'q' key is pressed, stop the loop
