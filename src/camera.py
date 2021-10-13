@@ -20,12 +20,7 @@ def ReleaseCameras():
     cv2.destroyAllWindows()
     
 def ScanColors():
-	cv2.waitKey(100)
-	frame = vs0.read()
-	
-	if frame is None:
-		return
-	
-	cv2.imshow("Frame", frame)
+    frame = vs0.read()
+    return frame
         
 

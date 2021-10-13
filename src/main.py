@@ -1,18 +1,37 @@
 import time
 import sys
 import os
+import cv2
 
 module_dir = os.path.join( os.path.dirname( __file__ ), 'Solver' )
 sys.path.append( module_dir )
 import solver as sv
-import motor_driver as md
+#import motor_driver as md
 import camera as cam
+import renderer as rend
 
-md.ResetAllMotors()
+mouseX = 0
+mouseY = 0
+
+def mouse(event,x,y,flags,param):
+    global mouseX,mouseY
+    if event == cv2.EVENT_MOUSEMOVE:
+        mouseX,mouseY = x,y
+
+#md.ResetAllMotors()
 cam.StartCameras()
+cv2.namedWindow('Frame')
+cv2.setMouseCallback('Frame', mouse)
 
-#while True:
-#	cam.ScanColors()
+while True:
+    frame = cam.ScanColors()
+    
+    if cv2.waitKey(10) & 0xFF == ord('q'):
+        break
+    print(mouseX)
+    rend.Render( frame, [mouseY / 10.0, mouseX / 10.0, 0] )
+    cv2.imshow("Frame", frame)
+
 
 faces = ["U", "B", "R", "D", "F", "L"]
 cubeString = 'LRFFURUDLDULFRBBLRLFBLFLBDRRRDRDUULFUUBBLDFFUDBFDBUDBR'
@@ -39,8 +58,8 @@ for char in solveString: #divides solve string to moves (letter - face) (number 
     
     inted = int(char)
     
-    if inted > 0 and inted < 4: #char is a number
-        md.MoveAFace(currentFace, inted)
+    #if inted > 0 and inted < 4: #char is a number
+        #md.MoveAFace(currentFace, inted)
 
 #md.SetMotorState( 2, 0 )
 #md.SetMotorState( 2, 1 )
@@ -49,4 +68,4 @@ for char in solveString: #divides solve string to moves (letter - face) (number 
 
 
 cam.ReleaseCameras()
-md.ReleaseMotors()
+#md.ReleaseMotors()
