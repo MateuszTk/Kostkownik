@@ -12,12 +12,25 @@ import renderer as rend
 
 mouseX = 0
 mouseY = 0
+fov = 0.35
+cdist = 9.1
 
 def mouse(event,x,y,flags,param):
+    
     global mouseX,mouseY
+    
     if event == cv2.EVENT_MOUSEMOVE:
         mouseX,mouseY = x,y
-
+        
+    if event == cv2.EVENT_MOUSEWHEEL:
+        global cdist
+        
+        if flags > 0:           
+            cdist += 0.05
+        else:
+            cdist -= 0.05
+        print('cdist' + str(cdist))
+        
 #md.ResetAllMotors()
 cam.StartCameras()
 cv2.namedWindow('Frame')
@@ -25,14 +38,21 @@ cv2.setMouseCallback('Frame', mouse)
 
 while True:
     frame = cam.ScanColors()
-    
-    if cv2.waitKey(10) & 0xFF == ord('q'):
+
+    key = cv2.waitKey(10) & 0xFF
+    if key == ord('q'):
         break
-    print(mouseX)
-    rend.Render( frame, [mouseY / 10.0, mouseX / 10.0, 0] )
+    if key == ord('z'):
+        fov += 0.05
+        print('fov' + str(fov))
+    elif key == ord('x'):
+        fov -= 0.05
+        print('fov' + str(fov))
+
+    rend.Render( frame, [mouseY / 40.0, mouseX / 10.0, 0], fov, cdist)
     cv2.imshow("Frame", frame)
 
-
+#U1-U9, R1-R9, F1-F9, D1-D9, L1-L9, B1-B9
 faces = ["U", "B", "R", "D", "F", "L"]
 cubeString = 'LRFFURUDLDULFRBBLRLFBLFLBDRRRDRDUULFUUBBLDFFUDBFDBUDBR'
 solveString = sv.solve( cubeString, 20, 1 )
