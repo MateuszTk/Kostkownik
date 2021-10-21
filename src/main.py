@@ -36,6 +36,10 @@ cam.StartCameras()
 cv2.namedWindow('Frame')
 cv2.setMouseCallback('Frame', mouse)
 
+#U1-U9, R1-R9, F1-F9, D1-D9, L1-L9, B1-B9
+faces = ["U", "B", "R", "D", "F", "L"]
+cubeString = 'LRFFURUDLDULFRBBLRLFBLFLBDRRRDRDUULFUUBBLDFFUDBFDBUDBR'
+
 while True:
     frame = cam.ScanColors()
 
@@ -49,12 +53,9 @@ while True:
         fov -= 0.05
         print('fov' + str(fov))
 
-    rend.Render( frame, [mouseY / 40.0, mouseX / 10.0, 0], fov, cdist)
+    rend.Render( frame, [mouseY / 40.0, mouseX / 10.0, 0], fov, cdist, cubeString)
     cv2.imshow("Frame", frame)
 
-#U1-U9, R1-R9, F1-F9, D1-D9, L1-L9, B1-B9
-faces = ["U", "B", "R", "D", "F", "L"]
-cubeString = 'LRFFURUDLDULFRBBLRLFBLFLBDRRRDRDUULFUUBBLDFFUDBFDBUDBR'
 solveString = sv.solve( cubeString, 20, 1 )
 print( solveString )
 

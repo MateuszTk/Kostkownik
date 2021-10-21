@@ -6,6 +6,11 @@ import time
 import math
 from operator import itemgetter
 
+
+
+
+
+
 cosCamX = 0
 sinCamX = 0
 cosCamY = 0
@@ -57,13 +62,21 @@ def TdToScreen( x, y, z, cdist, fov ):
     return rotated
 
 	
-def Render( frame, angle, fov, cdist ):	
+def Render( frame, angle, fov, cdist, cubeString ):	
     if frame is None:
         return
 
-    cubeString = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB' #bgr
-    #        U                 R             F              D               L           B
-    faces = [(0, 255, 255), (0, 100, 255), (255, 0, 0), (255, 255, 255), (0, 0, 255), (0, 255, 0)]
+    #cubeString = 'TUUUUUUUUTRRRRRRRRTFFFFFFFFTDDDDDDDDTLLLLLLLLTBBBBBBBB'
+
+    faces = {   #bgr
+        'U' : (255, 255, 255),
+        'R' : (0, 0, 255),
+        'F' : (255, 0, 0),
+        'D' : (0, 255, 255),
+        'L' : (0, 100, 255),
+        'B' : (0, 255, 0),
+        'T' : (0, 0, 0)
+    }
     
     _height, _width, channels = frame.shape
     global height
@@ -73,14 +86,16 @@ def Render( frame, angle, fov, cdist ):
     
     setRotation(angle)
 
-    cubeFaces = [[ 0 ] * 9] * 6
+    cubeFaces = [['T' for columns in range(9)] for rows in range(6)]
     
-    vertices = [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0], 0, 0.0] ]
+    vertices = [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0], cubeFaces[0][0], 0.0] ]
 
     for f in range(0, 6):
         for i in range(0, 9):
-            cubeFaces[f][i] = f
+            cubeFaces[f][i] = cubeString[f * 9 + i]
 
+    FaceId = lambda x, y : (y * 3 + x)
+    
     for x in range(0, 3):
         for y in range(0, 3):
             for z in range(0, 3):
@@ -88,30 +103,34 @@ def Render( frame, angle, fov, cdist ):
                 yc = y - 1.5
                 zc = z - 1.5
 
-                #back B
-                vertices.append( [[xc + 1.0, yc, zc],[xc, yc + 1.0, zc],[xc + 1.0, yc + 1.0, zc], 3, 0.0] )
-                vertices.append( [[xc + 1.0, yc, zc],[xc, yc + 1.0, zc],[xc, yc, zc], 3, 0.0] )
+                #front F
+                vertices.append( [[xc + 1.0, yc, zc],[xc, yc + 1.0, zc],[xc + 1.0, yc + 1.0, zc], cubeFaces[2][FaceId(x, 2 - y)], 0.0] )
+                vertices.append( [[xc + 1.0, yc, zc],[xc, yc + 1.0, zc],[xc, yc, zc], cubeFaces[2][FaceId(x, 2 - y)], 0.0] )
 
-                #upper U
-                vertices.append( [[xc + 1.0, yc, zc + 1],[xc, yc + 1.0, zc + 1],[xc + 1.0, yc + 1.0, zc + 1], 0, 0.0] )
-                vertices.append( [[xc + 1.0, yc, zc + 1],[xc, yc + 1.0, zc + 1],[xc, yc, zc + 1], 0, 0.0] )
+                #back B
+                vertices.append( [[xc + 1.0, yc, zc + 1],[xc, yc + 1.0, zc + 1],[xc + 1.0, yc + 1.0, zc + 1], cubeFaces[5][FaceId(2 - x, 2 - y)], 0.0] )
+                vertices.append( [[xc + 1.0, yc, zc + 1],[xc, yc + 1.0, zc + 1],[xc, yc, zc + 1], cubeFaces[5][FaceId(2 - x, 2 - y)], 0.0] )
 
                 #down D
-                vertices.append( [[xc + 1.0, yc, zc],[xc, yc, zc + 1.0],[xc + 1.0, yc, zc + 1.0], 5, 0.0] )
-                vertices.append( [[xc + 1.0, yc, zc],[xc, yc, zc + 1.0],[xc, yc, zc], 5, 0.0] )
+                vertices.append( [[xc + 1.0, yc, zc],[xc, yc, zc + 1.0],[xc + 1.0, yc, zc + 1.0], cubeFaces[3][FaceId(x,z)], 0.0] )
+                vertices.append( [[xc + 1.0, yc, zc],[xc, yc, zc + 1.0],[xc, yc, zc], cubeFaces[3][FaceId(x,z)], 0.0] )
 
-                #front F
-                vertices.append( [[xc + 1.0, yc + 1, zc],[xc, yc + 1, zc + 1.0],[xc + 1.0, yc + 1, zc + 1.0], 2, 0.0] )
-                vertices.append( [[xc + 1.0, yc + 1, zc],[xc, yc + 1, zc + 1.0],[xc, yc + 1, zc], 2, 0.0] )
+                #upper U
+                vertices.append( [[xc + 1.0, yc + 1, zc],[xc, yc + 1, zc + 1.0],[xc + 1.0, yc + 1, zc + 1.0], cubeFaces[0][FaceId(2 - z,x)], 0.0] )
+                vertices.append( [[xc + 1.0, yc + 1, zc],[xc, yc + 1, zc + 1.0],[xc, yc + 1, zc], cubeFaces[0][FaceId(2 - z,x)], 0.0] )
 
                 #left L
-                vertices.append( [[xc, yc, zc + 1.0],[xc, yc + 1.0, zc],[xc, yc + 1.0, zc + 1.0], 4, 0.0] )
-                vertices.append( [[xc, yc, zc + 1.0],[xc, yc + 1.0, zc],[xc, yc, zc], 4, 0.0] )
+                vertices.append( [[xc, yc, zc + 1.0],[xc, yc + 1.0, zc],[xc, yc + 1.0, zc + 1.0], cubeFaces[4][FaceId(2 - z, 2 - y)], 0.0] )
+                vertices.append( [[xc, yc, zc + 1.0],[xc, yc + 1.0, zc],[xc, yc, zc], cubeFaces[4][FaceId(2 - z, 2 - y)], 0.0] )
 
                 #right R
-                vertices.append( [[xc + 1, yc, zc + 1.0],[xc + 1, yc + 1.0, zc],[xc + 1, yc + 1.0, zc + 1.0], 1, 0.0] )
-                vertices.append( [[xc + 1, yc, zc + 1.0],[xc + 1, yc + 1.0, zc],[xc + 1, yc, zc], 1, 0.0] )
+                vertices.append( [[xc + 1, yc, zc + 1.0],[xc + 1, yc + 1.0, zc],[xc + 1, yc + 1.0, zc + 1.0], cubeFaces[1][FaceId(z, 2 - y)], 0.0] )
+                vertices.append( [[xc + 1, yc, zc + 1.0],[xc + 1, yc + 1.0, zc],[xc + 1, yc, zc], cubeFaces[1][FaceId(z, 2 - y)], 0.0] )
 
+    iz = 1.5 
+    vertices.append( [[-0.5, iz, -0.5],[0.5, iz, 0.5],[0.5, iz + 1, 0.5], 'T', 0.0] )
+    vertices.append( [[-0.5, iz, -0.5],[-0.5, iz + 1, -0.5],[0.5, iz + 1, 0.5], 'T', 0.0] )
+                
     for i, face in enumerate(vertices):
         vertices[i][0] = TdToScreen(face[0][0], face[0][1], face[0][2], cdist, fov)
         vertices[i][1] = TdToScreen(face[1][0], face[1][1], face[1][2], cdist, fov)
