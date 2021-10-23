@@ -12,6 +12,8 @@ import renderer as rend
 
 mouseX = 0
 mouseY = 0
+cubeX = 0.0
+cubeY = 0.0
 fov = 0.35
 cdist = 9.1
 
@@ -38,11 +40,13 @@ cv2.setMouseCallback('Frame', mouse)
 
 #U1-U9, R1-R9, F1-F9, D1-D9, L1-L9, B1-B9
 faces = ["U", "B", "R", "D", "F", "L"]
-cubeString = 'LRFFURUDLDULFRBBLRLFBLFLBDRRRDRDUULFUUBBLDFFUDBFDBUDBR'
+cubeString = list('LRFFURUDLDULFRBBLRLFBLFLBDRRRDRDUULFUUBBLDFFUDBFDBUDBR')
+
+selected = [100000.0, ['T', -1]]
 
 while True:
     frame = cam.ScanColors()
-
+    color = 'T'
     key = cv2.waitKey(10) & 0xFF
     if key == ord('q'):
         break
@@ -52,9 +56,37 @@ while True:
     elif key == ord('x'):
         fov -= 0.05
         print('fov' + str(fov))
+    elif key == ord('w'):
+        cubeY += 0.1
+    elif key == ord('s'):
+        cubeY -= 0.1
+    elif key == ord('d'):
+        cubeX += 0.1
+    elif key == ord('a'):
+        cubeX -= 0.1
 
-    rend.Render( frame, [mouseY / 40.0, mouseX / 10.0, 0], fov, cdist, cubeString)
+    elif key == ord('1'):
+        color = 'U'
+    elif key == ord('2'):
+        color = 'R'
+    elif key == ord('3'):
+        color = 'F'
+    elif key == ord('4'):
+        color = 'D'
+    elif key == ord('5'):
+        color = 'L'
+    elif key == ord('6'):
+        color = 'B'
+
+    if color != 'T':
+        cubeString[selected[1][1]] = color
+        
+    selected = rend.Render( frame, [mouseX, mouseY], [cubeY, cubeX, 0], fov, cdist, cubeString, selected)
     cv2.imshow("Frame", frame)
+
+file = open("cubeString.txt", "w")
+file.write("".join(cubeString) + '\n')
+file.close()
 
 solveString = sv.solve( cubeString, 20, 1 )
 print( solveString )

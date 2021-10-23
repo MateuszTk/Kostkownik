@@ -5,21 +5,18 @@ import cv2
 import time
 import math
 from operator import itemgetter
+from typing import NamedTuple
 
-
-
-
-
-
-cosCamX = 0
-sinCamX = 0
-cosCamY = 0
-sinCamY = 0
-cosCamZ = 0
-sinCamZ = 0
+cosCamX = 0.0
+sinCamX = 0.0
+cosCamY = 0.0
+sinCamY = 0.0
+cosCamZ = 0.0
+sinCamZ = 0.0
 
 width = 0
 height = 0
+
 
 def setRotation( angle ):
     global cosCamX
@@ -37,7 +34,7 @@ def setRotation( angle ):
     sinCamZ = math.sin(angle[2])
 
 def rotateWorld( x, y, z ):
-    vec = [0, 0, 0]
+    vec = [0.0, 0.0, 0.0]
     rotated = [x * cosCamZ + y * sinCamZ, y * cosCamZ - x * sinCamZ]
     vec[0] = rotated[0]
     vec[1] = rotated[1]
@@ -61,11 +58,17 @@ def TdToScreen( x, y, z, cdist, fov ):
 
     return rotated
 
+def normalize(v):
+    vm = math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
+    return [v[0] / vm, v[1] / vm, v[2] / vm]
+
 	
-def Render( frame, angle, fov, cdist, cubeString ):	
+def Render( frame, mouse, angle, fov, cdist, cubeString, selected ):
     if frame is None:
         return
 
+    #angle = [mouse[1] / 40.0, mouse[0] / 20.0, 0]
+    
     #cubeString = 'TUUUUUUUUTRRRRRRRRTFFFFFFFFTDDDDDDDDTLLLLLLLLTBBBBBBBB'
 
     faces = {   #bgr
@@ -75,7 +78,8 @@ def Render( frame, angle, fov, cdist, cubeString ):
         'D' : (0, 255, 255),
         'L' : (0, 100, 255),
         'B' : (0, 255, 0),
-        'T' : (0, 0, 0)
+        'T' : (0, 0, 0),
+        'S' : (255, 255, 0)
     }
     
     _height, _width, channels = frame.shape
@@ -83,16 +87,21 @@ def Render( frame, angle, fov, cdist, cubeString ):
     global width
     height = _height
     width = _width
-    
+
+    bounds = [[-1.5, -1.5, -1.5],[1.5, 1.5, 1.5]]
+
     setRotation(angle)
 
-    cubeFaces = [['T' for columns in range(9)] for rows in range(6)]
+    cubeFaces = [[['T', -1] for columns in range(9)] for rows in range(6)]
     
     vertices = [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0], cubeFaces[0][0], 0.0] ]
 
     for f in range(0, 6):
         for i in range(0, 9):
-            cubeFaces[f][i] = cubeString[f * 9 + i]
+            if (f * 9 + i) != selected[1][1]:
+                cubeFaces[f][i] = [cubeString[f * 9 + i], f * 9 + i]
+            else:
+                cubeFaces[f][i] = ['S', f * 9 + i]
 
     FaceId = lambda x, y : (y * 3 + x)
     
@@ -128,8 +137,10 @@ def Render( frame, angle, fov, cdist, cubeString ):
                 vertices.append( [[xc + 1, yc, zc + 1.0],[xc + 1, yc + 1.0, zc],[xc + 1, yc, zc], cubeFaces[1][FaceId(z, 2 - y)], 0.0] )
 
     iz = 1.5 
-    vertices.append( [[-0.5, iz, -0.5],[0.5, iz, 0.5],[0.5, iz + 1, 0.5], 'T', 0.0] )
-    vertices.append( [[-0.5, iz, -0.5],[-0.5, iz + 1, -0.5],[0.5, iz + 1, 0.5], 'T', 0.0] )
+    vertices.append( [[-0.5, iz, -0.5],[0.5, iz, 0.5],[0.5, iz + 1, 0.5], ['T', 0], 0.0] )
+    vertices.append( [[-0.5, iz, -0.5],[-0.5, iz + 1, -0.5],[0.5, iz + 1, 0.5], ['T', 0], 0.0] )
+    #vertices.append( [[0, 0, 0],[0, 0, -9],[0, 1, -9], 'T', 0.0] )
+    
                 
     for i, face in enumerate(vertices):
         vertices[i][0] = TdToScreen(face[0][0], face[0][1], face[0][2], cdist, fov)
@@ -138,6 +149,8 @@ def Render( frame, angle, fov, cdist, cubeString ):
         vertices[i][4] = (vertices[i][0][2] + vertices[i][1][2] + vertices[i][2][2]) / 3.0
    
     vertices.sort(key=lambda x: x[4], reverse = True)
+
+    selected[0] = 100000.0
     
     for face in vertices:
         pt1 = (int(-face[0][0] + width * 0.5), int(face[0][1] + height * 0.5))
@@ -145,5 +158,13 @@ def Render( frame, angle, fov, cdist, cubeString ):
         pt3 = (int(-face[2][0] + width * 0.5), int(face[2][1] + height * 0.5))
         
         triangle_cnt = np.array( [pt1, pt2, pt3] )
-        cv2.drawContours(frame, [triangle_cnt], 0, faces[face[3]], -1)
-	
+        cn = cv2.pointPolygonTest(triangle_cnt, (mouse), True)
+        if cn > 0 and face[3][1] != 'T' and selected[0] > face[4]:
+            selected = [face[4], face[3]]
+            	
+        cv2.drawContours(frame, [triangle_cnt], 0, faces[face[3][0]], -1)
+        
+    if not (selected[0] != 100000.0 and selected[1][0] != 'T'):
+        selected[1] = ['T', -1]
+
+    return selected

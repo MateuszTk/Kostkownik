@@ -13,7 +13,7 @@ def StartCameras():
     #vs.stream.set(cv2.CAP_PROP_AUTO_WB, 0)
     #vs.stream.set(cv2.CAP_PROP_GAIN, 1)
 
-    time.sleep(1)
+    time.sleep(0.5)
 
 def ReleaseCameras():
     vs0.stop()
