@@ -17,6 +17,16 @@ sinCamZ = 0.0
 width = 0
 height = 0
 
+faces = {   #bgr
+    'U' : (240, 240, 240),
+    'R' : (0, 0, 240),
+    'F' : (240, 0, 0),
+    'D' : (0, 240, 240),
+    'L' : (0, 100, 240),
+    'B' : (0, 240, 0),
+    'T' : (0, 0, 0)
+}
+
 
 def setRotation( angle ):
     global cosCamX
@@ -62,26 +72,59 @@ def normalize(v):
     vm = math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
     return [v[0] / vm, v[1] / vm, v[2] / vm]
 
+def Buttons( frame, mouse, mclick, mode ):
+    buttons = np.full((np.shape(frame)[0], 160, 3), np.uint8(100))
+    clicked = 'T'
+    global width
+    global faces
+
+    scale = 65
+    top = 140
+    _left = 10
+    _sp = 10
+    
+    for i, (key, color) in enumerate(faces.items()):
+        if key != 'T':
+            
+            y = i * scale if i < 3 else (i - 3) * scale
+            sp = i * _sp if i < 3 else (i - 3) * _sp
+            left = _left if i < 3 else scale + 2 * _left
+
+            cnt = np.array( [(left, top + y + sp), (left, top + y + scale + sp), (left + scale,  top + y + scale + sp), (left + scale, top + y + sp)] )
+            cv2.drawContours(buttons, [cnt], 0, color, -1)
+            
+            cnt = np.array( [(width + left, top + y + sp), (width + left, top + y + scale + sp), (width + left + scale,  top + y + scale + sp), (width + left + scale, top + y + sp)] )
+            cn = cv2.pointPolygonTest(cnt, (mouse), True)
+            if cn > 0:
+                clicked = key
+    
+    top = 10
+    
+    cnt = np.array( [(_left, top), (_left, top + 40), (2 * _left + 2 * scale,  top + 40), (2 * _left + 2 * scale, top)] )
+    cv2.drawContours(buttons, [cnt], 0, (255, 0, 255), -1)   
+    cnt = np.array( [(width + _left, top), (width + _left, top + 40), (width + 2 * _left + 2 * scale,  top + 40), (width + 2 * _left + 2 * scale, top)] )
+    if cv2.pointPolygonTest(cnt, (mouse), True) > 0 and mclick:
+        mode = 1
+        mclick = 0
+        print(mode)
+
+    top = 60
+    cnt = np.array( [(_left, top), (_left, top + 40), (2 * _left + 2 * scale,  top + 40), (2 * _left + 2 * scale, top)] )
+    cv2.drawContours(buttons, [cnt], 0, (255, 0, 255), -1)   
+    cnt = np.array( [(width + _left, top), (width + _left, top + 40), (width + 2 * _left + 2 * scale,  top + 40), (width + 2 * _left + 2 * scale, top)] )
+    if cv2.pointPolygonTest(cnt, (mouse), True) > 0 and mclick:
+        mode = 0
+        mclick = 0
+        print(mode)
+    
+    return (np.hstack((frame, buttons)), clicked, mode, mclick)
 	
 def Render( frame, mouse, angle, fov, cdist, cubeString, selected ):
     if frame is None:
         return
-
-    #angle = [mouse[1] / 40.0, mouse[0] / 20.0, 0]
     
     #cubeString = 'TUUUUUUUUTRRRRRRRRTFFFFFFFFTDDDDDDDDTLLLLLLLLTBBBBBBBB'
-
-    faces = {   #bgr
-        'U' : (255, 255, 255),
-        'R' : (0, 0, 255),
-        'F' : (255, 0, 0),
-        'D' : (0, 255, 255),
-        'L' : (0, 100, 255),
-        'B' : (0, 255, 0),
-        'T' : (0, 0, 0),
-        'S' : (255, 255, 0)
-    }
-    
+    global faces
     _height, _width, channels = frame.shape
     global height
     global width
@@ -98,10 +141,8 @@ def Render( frame, mouse, angle, fov, cdist, cubeString, selected ):
 
     for f in range(0, 6):
         for i in range(0, 9):
-            if (f * 9 + i) != selected[1][1]:
-                cubeFaces[f][i] = [cubeString[f * 9 + i], f * 9 + i]
-            else:
-                cubeFaces[f][i] = ['S', f * 9 + i]
+            cubeFaces[f][i] = [cubeString[f * 9 + i], f * 9 + i]
+
 
     FaceId = lambda x, y : (y * 3 + x)
     
@@ -150,6 +191,7 @@ def Render( frame, mouse, angle, fov, cdist, cubeString, selected ):
    
     vertices.sort(key=lambda x: x[4], reverse = True)
 
+    prev_selected = selected
     selected[0] = 100000.0
     
     for face in vertices:
@@ -161,8 +203,14 @@ def Render( frame, mouse, angle, fov, cdist, cubeString, selected ):
         cn = cv2.pointPolygonTest(triangle_cnt, (mouse), True)
         if cn > 0 and face[3][1] != 'T' and selected[0] > face[4]:
             selected = [face[4], face[3]]
-            	
-        cv2.drawContours(frame, [triangle_cnt], 0, faces[face[3][0]], -1)
+
+        color = list(faces[face[3][0]])
+        if prev_selected[1][1] == face[3][1]:
+            color[0] = min(255, color[0] + 100)
+            color[1] = min(255, color[1] + 100)
+            color[2] = min(255, color[2] + 100)
+        
+        cv2.drawContours(frame, [triangle_cnt], 0, color, -1)
         
     if not (selected[0] != 100000.0 and selected[1][0] != 'T'):
         selected[1] = ['T', -1]

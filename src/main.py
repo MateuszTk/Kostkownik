@@ -2,6 +2,7 @@ import time
 import sys
 import os
 import cv2
+import numpy as np
 
 module_dir = os.path.join( os.path.dirname( __file__ ), 'Solver' )
 sys.path.append( module_dir )
@@ -15,12 +16,16 @@ mouseY = 0
 cubeX = 0.0
 cubeY = 0.0
 fov = 0.35
-cdist = 9.1
+cdist = 10
+L_click = 1
 
 def mouse(event,x,y,flags,param):
     
-    global mouseX,mouseY
+    global mouseX, mouseY, L_click
     
+    if event == cv2.EVENT_LBUTTONDOWN:
+        L_click = 1
+
     if event == cv2.EVENT_MOUSEMOVE:
         mouseX,mouseY = x,y
         
@@ -39,14 +44,28 @@ cv2.namedWindow('Frame')
 cv2.setMouseCallback('Frame', mouse)
 
 #U1-U9, R1-R9, F1-F9, D1-D9, L1-L9, B1-B9
-faces = ["U", "B", "R", "D", "F", "L"]
+#face letter and its servo id
+faces = {
+    'U' : 0,
+    'R' : 2,
+    'F' : 4,
+    'D' : 3,
+    'L' : 5,
+    'B' : 1
+}
+
 cubeString = list('LRFFURUDLDULFRBBLRLFBLFLBDRRRDRDUULFUUBBLDFFUDBFDBUDBR')
 
 selected = [100000.0, ['T', -1]]
+color = 'T'
+mode = 1
 
 while True:
-    frame = cam.ScanColors()
-    color = 'T'
+    if mode == 0:
+        frame = cam.ScanColors()
+    else:
+        frame = np.full((480, 640, 3), np.uint8(50))
+
     key = cv2.waitKey(10) & 0xFF
     if key == ord('q'):
         break
@@ -76,12 +95,22 @@ while True:
     elif key == ord('5'):
         color = 'L'
     elif key == ord('6'):
-        color = 'B'
+        color = 'B'    
 
-    if color != 'T':
-        cubeString[selected[1][1]] = color
+    if mode == 1:
+        selected = rend.Render( frame, [mouseX, mouseY], [cubeY, cubeX, 0], fov, cdist, cubeString, selected )
+        if color != 'T' and selected[1][0] != 'T' and L_click and mouseX < 640:        
+            cubeString[selected[1][1]] = color
+
+    frame, _color, mode, L_click = rend.Buttons( frame, [mouseX, mouseY], L_click, mode )
+    if _color != 'T' and L_click:
+        color = _color
+        L_click = 0
+        print(color)
         
-    selected = rend.Render( frame, [mouseX, mouseY], [cubeY, cubeX, 0], fov, cdist, cubeString, selected)
+    L_click *= 2
+    if L_click >= 4:
+        L_click = 0
     cv2.imshow("Frame", frame)
 
 file = open("cubeString.txt", "w")
@@ -92,32 +121,22 @@ solveString = sv.solve( cubeString, 20, 1 )
 print( solveString )
 
 currentFace = 0
-for char in solveString: #divides solve string to moves (letter - face) (number - multiplier) (( - marks the end)
+#divides solve string to moves (letter - face) (number - multiplier) ('(' - marks the end)
+for char in solveString:
     if char == '(':
         break
         
     if char == ' ':
         continue
-    
-    charFound = False
-    for i in range(0, 6): #check if char corresponds to any of face chars
-        if faces[i] == char:
-            currentFace = i
-            charFound = True
-            break
-    
-    if charFound:
-        continue
+
+    if char in faces:
+        currentFace = faces[char]
+        continue   
     
     inted = int(char)
-    
+
     #if inted > 0 and inted < 4: #char is a number
         #md.MoveAFace(currentFace, inted)
-
-#md.SetMotorState( 2, 0 )
-#md.SetMotorState( 2, 1 )
-#md.SetMotorState( 2, 2 )
-#md.SetMotorState( 2, 3 )
 
 
 cam.ReleaseCameras()
