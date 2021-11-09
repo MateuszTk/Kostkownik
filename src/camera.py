@@ -13,19 +13,14 @@ def StartCameras():
     #vs.stream.set(cv2.CAP_PROP_AUTO_WB, 0)
     #vs.stream.set(cv2.CAP_PROP_GAIN, 1)
 
-    time.sleep(1)
+    time.sleep(0.5)
 
 def ReleaseCameras():
     vs0.stop()
     cv2.destroyAllWindows()
     
 def ScanColors():
-	cv2.waitKey(100)
-	frame = vs0.read()
-	
-	if frame is None:
-		return
-	
-	cv2.imshow("Frame", frame)
+    frame = vs0.read()
+    return frame
         
 
