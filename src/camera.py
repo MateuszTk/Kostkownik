@@ -109,8 +109,8 @@ def Hue(color): #works only if R >= G >= B
     
 def StartCameras():
     global vs0, vs1
-    vs0 = VideoStream( src = 0 ).start()
-    vs1 = VideoStream( src = 1 ).start()
+    vs0 = VideoStream( src = 2 ).start()
+    vs1 = VideoStream( src = 0 ).start()
 
     # setting camera parameters
     #vs.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0) 

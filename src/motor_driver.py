@@ -13,16 +13,16 @@ def MoveAFace(faceIndex, times):
     
     
 def SetMotorState( motor_id, state_id ):
-	serial_connection.goto(motor_id, motorStates[state_id], speed=512, degrees=True)
-	time.sleep(2)
+    serial_connection.goto(motor_id, motorStates[state_id], speed=1023, degrees=True)
+    time.sleep(1)
 
 
 def ResetAllMotors():
-	print('Resetting motors...')
+    print('Resetting motors...')
     for i in range(0, 6):
-        serial_connection.goto(i, motorStates[0], speed=512, degrees=True)
-        time.sleep(2)
-	print('Done!')
+        serial_connection.goto(i, motorStates[0], speed=1023, degrees=True)
+        time.sleep(1)
+    print('Done!')
       
 def ReleaseMotors():
-	serial_connection.close()
+    serial_connection.close()
