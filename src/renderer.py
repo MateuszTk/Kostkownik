@@ -16,6 +16,9 @@ sinCamZ = 0.0
 
 width = 0
 height = 0
+font = cv2.FONT_HERSHEY_SIMPLEX
+
+mouse_array = np.array( cv2.imread(cv2.samples.findFile("images\mouse.png")) )
 
 faces = {   #bgr
     'U' : (240, 240, 240),
@@ -72,57 +75,106 @@ def normalize(v):
     vm = math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
     return [v[0] / vm, v[1] / vm, v[2] / vm]
 
-def Buttons( frame, mouse, mclick, mode ):
-    buttons = np.full((np.shape(frame)[0], 160, 3), np.uint8(100))
+def Buttons( frame, mouse, mclick, mode, _color ):
+    #buttons = np.full((np.shape(frame)[0], 160, 3), np.uint8(100))
     clicked = 'T'
     global width
     global faces
 
-    scale = 65
-    top = 140
+    scale = 60
+    top = 10
     _left = 10
-    _sp = 10
+    _sp = 7
+    
+    right = np.shape(frame)[1]
+    right_margin = 10
+    
+    width = 180
+    height = 50
+    
+    button_margin = 10
+    
+    button_unselected = (100, 70, 55) #BGR
+    button_selected = (130, 90, 50)
+    button_pressed = (160, 115, 40)
+    
     
     #color selection buttons
     
     if mode == 1:
+        
+        cnt = np.array( [(_left, top), (_left, top + scale), (_left + scale,  top + scale), (_left + scale, top)] )
+        
+        size = 60
+        margin = 0
+        
+        cn = cv2.pointPolygonTest(cnt, tuple(mouse), True)
+        if _color == 'T':
+            size = 50
+            margin = 5
+        elif cn > 0:
+            size = 58
+            margin = 1
+            clicked = 'N'
+        
+        global mouse_array
+        _mouse_array = imutils.resize(mouse_array, width = size)
+        frame[10 + margin:10 + margin + size, 10 + margin:10 + margin + size] = _mouse_array
+        
+        
         for i, (key, color) in enumerate(faces.items()):
             if key != 'T':
                 
-                y = i * scale if i < 3 else (i - 3) * scale
-                sp = i * _sp if i < 3 else (i - 3) * _sp
-                left = _left if i < 3 else scale + 2 * _left
+                y = (i + 1) * scale 
+                sp = (i + 1) * _sp 
+                left = _left
 
                 cnt = np.array( [(left, top + y + sp), (left, top + y + scale + sp), (left + scale,  top + y + scale + sp), (left + scale, top + y + sp)] )
-                cv2.drawContours(buttons, [cnt], 0, color, -1)
+                cv2.drawContours(frame, [cnt], 0, color, -1)
                 
-                cnt = np.array( [(width + left, top + y + sp), (width + left, top + y + scale + sp), (width + left + scale,  top + y + scale + sp), (width + left + scale, top + y + sp)] )
+                if _color == key:
+                    #cv2.drawContours(frame, [cnt], 0, (255, 255, 255), -1)
+                    cv2.rectangle(frame, cnt[0], cnt[2], (50, 50, 50), 10)
+                    
+                
+                #cnt = np.array( [(width + left, top + y + sp), (width + left, top + y + scale + sp), (width + left + scale,  top + y + scale + sp), (width + left + scale, top + y + sp)] )
                 cn = cv2.pointPolygonTest(cnt, tuple(mouse), True)
                 if cn > 0:
+                    if _color != key:
+                        cv2.rectangle(frame, cnt[0], cnt[2], (50, 50, 50), 2)
                     clicked = key
     
-    top = 10
+    top = button_margin
+    color = button_unselected
     
-    #mode 1 button
-    cnt = np.array( [(_left, top), (_left, top + 40), (2 * _left + 2 * scale,  top + 40), (2 * _left + 2 * scale, top)] )
-    cv2.drawContours(buttons, [cnt], 0, (255, 0, 255), -1)   
-    cnt = np.array( [(width + _left, top), (width + _left, top + 40), (width + 2 * _left + 2 * scale,  top + 40), (width + 2 * _left + 2 * scale, top)] )
-    if cv2.pointPolygonTest(cnt, tuple(mouse), True) > 0 and mclick:
-        mode = 1
-        mclick = 0
-        print(mode)
+    heights = [70, 10, 130, 360, 420]
+    texts = ["Cameras", "3D Preview", "Console", "Solve", "Scramble"]
     
-    #mode 0 button
-    top = 60
-    cnt = np.array( [(_left, top), (_left, top + 40), (2 * _left + 2 * scale,  top + 40), (2 * _left + 2 * scale, top)] )
-    cv2.drawContours(buttons, [cnt], 0, (255, 0, 255), -1)   
-    cnt = np.array( [(width + _left, top), (width + _left, top + 40), (width + 2 * _left + 2 * scale,  top + 40), (width + 2 * _left + 2 * scale, top)] )
-    if cv2.pointPolygonTest(cnt, tuple(mouse), True) > 0 and mclick:
-        mode = 0
-        mclick = 0
-        print(mode)
+    action = 0 #1 - solve, 2 - scramble
+    for i in range(0, 5):
+        top = heights[i]
+        text = texts[i]
+        
+        cnt = np.array( [(right - width - right_margin, top), (right - width - right_margin, top + height), (right - right_margin,  top + height), (right - right_margin, top)] )
     
-    return (np.hstack((frame, buttons)), clicked, mode, mclick)
+        if mode == i:
+            color = button_pressed
+        elif cv2.pointPolygonTest(cnt, tuple(mouse), True) > 0:
+            color = button_selected
+            if mclick:
+                if i < 3:
+                    mode = i
+                else:
+                    action = i - 2
+                mclick = 0
+        else:
+            color = button_unselected
+
+        cv2.drawContours(frame, [cnt], 0, color, -1)  
+        box = cv2.getTextSize(text, font, 1, 2)
+        cv2.putText(frame, text, (right - right_margin - int(width/2 + box[0][0]/2), top + int(height/2 + box[0][1]/2)), font, 1,(255,255,255),2 , cv2.LINE_AA)
+    
+    return (frame, clicked, mode, mclick, action)
 	
 def Render( frame, mouse, angle, fov, cdist, cubeString, selected ):
     if frame is None:

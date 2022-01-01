@@ -76,38 +76,12 @@ def ConstructPositions(centers, upsideDown = False): #construct sample positions
     squares = [[0] * 2 for i in range(27)]
 
     if upsideDown:
-        lineA1 = CalcLine(centers[0], centers[2])
-        lineA2 = CalcLine(centers[3], centers[5])
-        pointA = CalcIntersection(lineA1, lineA2)
-        
-        lineB1 = CalcLine(centers[0], centers[1])
-        lineB2 = CalcLine(centers[4], centers[5])
-        pointB = CalcIntersection(lineB1, lineB2)
-        
-        
-        lineM1 = CalcLine(centers[1], pointA)
-        lineM2 = CalcLine(centers[2], pointB)
-        pointM = CalcIntersection(lineM1, lineM2)
-        
-        squares[0:9] = DisectSquare(centers[2], centers[4], centers[5], pointM)
-        squares[9:18] = DisectSquare(centers[0], centers[2], pointM, centers[1])
-        squares[18:27] = DisectSquare(pointM, centers[5], centers[3], centers[1])
+        squares[0:9] = DisectSquare(centers[2], centers[5], centers[6], centers[3])
+        squares[9:18] = DisectSquare(centers[0], centers[2], centers[3], centers[1])
+        squares[18:27] = DisectSquare(centers[3], centers[6], centers[4], centers[1])
     else:
-        lineA1 = CalcLine(centers[3], centers[5])
-        lineA2 = CalcLine(centers[0], centers[2])
-        pointA = CalcIntersection(lineA1, lineA2)
-        
-        lineB1 = CalcLine(centers[0], centers[1])
-        lineB2 = CalcLine(centers[4], centers[5])
-        pointB = CalcIntersection(lineB1, lineB2)
-        
-        
-        lineM1 = CalcLine(centers[4], pointA)
-        lineM2 = CalcLine(centers[3], pointB)
-        pointM = CalcIntersection(lineM1, lineM2)
-        
-        squares[0:9] = DisectSquare(centers[4], pointM, centers[0], centers[2])
-        squares[9:18] = DisectSquare(centers[0], pointM, centers[3], centers[1])
-        squares[18:27] = DisectSquare(pointM, centers[4], centers[5], centers[3])
+        squares[0:9] = DisectSquare(centers[5], centers[3], centers[0], centers[2])
+        squares[9:18] = DisectSquare(centers[0], centers[3], centers[4], centers[1])
+        squares[18:27] = DisectSquare(centers[3], centers[5], centers[6], centers[4])
         
     return squares

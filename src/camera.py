@@ -109,13 +109,17 @@ def Hue(color): #works only if R >= G >= B
     
 def StartCameras():
     global vs0, vs1
-    vs0 = VideoStream( src = 2 ).start()
-    vs1 = VideoStream( src = 0 ).start()
+    vs0 = VideoStream( src = 0 ).start()
+    vs1 = VideoStream( src = 1 ).start()
 
     # setting camera parameters
-    #vs.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0) 
-    #vs.stream.set(cv2.CAP_PROP_AUTO_WB, 0)
-    #vs.stream.set(cv2.CAP_PROP_GAIN, 1)
+    #vs0.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0) 
+    #vs0.stream.set(cv2.CAP_PROP_AUTO_WB, 0)
+    #vs0.stream.set(cv2.CAP_PROP_GAIN, 1)
+    
+    #vs1.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0) 
+    #vs1.stream.set(cv2.CAP_PROP_AUTO_WB, 0)
+    #vs1.stream.set(cv2.CAP_PROP_GAIN, 1)
 
     time.sleep(0.5)
 
@@ -132,7 +136,7 @@ def SampleColor(frame, position, dist = 3):
     for x in range(int(position[0]) - dist, int(position[0]) + dist + 1):
         for y in range(int(position[1]) - dist, int(position[1]) + dist + 1):
             
-            average = (frame[y][x][0] + frame[y][x][1] + frame[y][x][2]) / 3.0
+            average = float(float(frame[y][x][0]) + float(frame[y][x][1]) + float(frame[y][x][2])) / 3.0
             if average > -1: #it's not black
                 numOfPixels = numOfPixels + 1
                 color += frame[y][x]
@@ -257,43 +261,56 @@ def ScanColors(marks1, marks2, samplePositions, focusedCamera1, cubeString):
                 cv2.circle(frame2, (int(samplePositions[i][0]), int(samplePositions[i][1])), 10, colors[i], 2)
     
     
-    text = ["UR", "R", "U", "RB", "UB", "B"]
-    for i in range(0, 6):
+    #text = ["UR", "R", "U", "RB", "UB", "B"]
+    for i in range(0, 7):
         if marks1[i] != [-1, -1]:
             cv2.circle(frame1, tuple(marks1[i]), 10, (0, 0, 0), 2)
             
-            if full1:
-                cv2.putText(frame1, text[i], tuple(marks1[i]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+            #if full1:
+                #cv2.putText(frame1, text[i], tuple(marks1[i]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
                 
-    text = ["L", "DL", "FL", "D", "F", "FD"]
-    for i in range(0, 6):
+    #text = ["L", "DL", "FL", "D", "F", "FD"]
+    for i in range(0, 7):
         if marks2[i] != [-1, -1]:
             cv2.circle(frame2, tuple(marks2[i]), 10, (0, 0, 0), 2)
             
-            if full2:
-                cv2.putText(frame2, text[i], tuple(marks2[i]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)          
-           
-                      
+            #if full2:
+                #cv2.putText(frame2, text[i], tuple(marks2[i]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)          
+   
+    #preparing camera for screen output
+    dim  = (640, 480)
+    if (frame1Valid):
+        frame1 = cv2.resize(frame1, dim) 
+    if (frame2Valid):
+        frame2 = cv2.resize(frame2, dim)
+    
     main = np.full((480, 640, 3), np.uint8(50))   
-    if focusedCamera1 and hasattr(frame1, "__len__"):
+    if focusedCamera1 and frame1Valid:
         main = frame1
-    elif not focusedCamera1 and hasattr(frame2, "__len__"):
+    elif not focusedCamera1 and frame2Valid:
         main = frame2
     
     mini = np.full((480, 640, 3), np.uint8(50))   
-    if focusedCamera1 and hasattr(frame2, "__len__"):
-        mini = frame2
-    elif not focusedCamera1 and hasattr(frame1, "__len__"):
-        mini = frame1
-        
-    mini = imutils.resize(mini, width = int(main.shape[1] / 4))
-    main[0:mini.shape[0], 0:mini.shape[1]] = mini
+    if focusedCamera1 and frame2Valid:
+        mini = imutils.resize(frame2, width = int(main.shape[1] / 4))
+        main[main.shape[0] - mini.shape[0]:main.shape[0], 0:mini.shape[1]] = mini
+    elif not focusedCamera1 and frame1Valid:
+        mini = imutils.resize(frame1, width = int(main.shape[1] / 4))
+        main[0:mini.shape[0], 0:mini.shape[1]] = mini
+
+    
+    blur = main[0:480, 480:640]
+    blur = cv2.flip(blur, 1)
+    blur = cv2.blur(blur,(10,10))
+    
+    main = np.hstack((main, blur))
     
     if full1 and full2 and frame1Valid and frame2Valid:
         chars = TranslateColors(colors)
         if chars != "":
-            cubeString[0] = chars
+            return main, list(chars) 
+        
+    return main, cubeString
     
-    
-    return main
+   
 

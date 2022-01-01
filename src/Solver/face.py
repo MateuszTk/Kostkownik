@@ -28,9 +28,9 @@ class FaceCube:
     def from_string(self, s):
         """Construct a facelet cube from a string. See class Facelet(IntEnum) in enums.py for string format."""
         if len(s) < 54:
-            return 'Error: Cube definition string ' + s + ' contains less than 54 facelets.'
+            return 'Error: Cube definition string contains less than 54 facelets.'
         elif len(s) > 54:
-            return 'Error: Cube definition string ' + s + ' contains more than 54 facelets.'
+            return 'Error: Cube definition string contains more than 54 facelets.'
         cnt = [0] * 6
         for i in range(54):
             if s[i] == 'U':
@@ -54,7 +54,7 @@ class FaceCube:
         if all(x == 9 for x in cnt):
             return True
         else:
-            return 'Error: Cube definition string ' + s + ' does not contain exactly 9 facelets of each color.'
+            return 'Error: Cube definition string does not contain exactly 9 facelets of each color.'
 
 
     def to_string(self):
