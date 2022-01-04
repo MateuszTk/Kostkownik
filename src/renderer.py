@@ -18,7 +18,7 @@ width = 0
 height = 0
 font = cv2.FONT_HERSHEY_SIMPLEX
 
-mouse_array = np.array( cv2.imread(cv2.samples.findFile("images\mouse.png")) )
+mouse_array = np.array( cv2.imread(cv2.samples.findFile("./images/mouse.png")) )
 
 faces = {   #bgr
     'U' : (240, 240, 240),
@@ -134,14 +134,14 @@ def Buttons( frame, mouse, mclick, mode, _color ):
                 
                 if _color == key:
                     #cv2.drawContours(frame, [cnt], 0, (255, 255, 255), -1)
-                    cv2.rectangle(frame, cnt[0], cnt[2], (50, 50, 50), 10)
+                    cv2.rectangle(frame, tuple(cnt[0]), tuple(cnt[2]), (50, 50, 50), 10)
                     
                 
                 #cnt = np.array( [(width + left, top + y + sp), (width + left, top + y + scale + sp), (width + left + scale,  top + y + scale + sp), (width + left + scale, top + y + sp)] )
                 cn = cv2.pointPolygonTest(cnt, tuple(mouse), True)
                 if cn > 0:
                     if _color != key:
-                        cv2.rectangle(frame, cnt[0], cnt[2], (50, 50, 50), 2)
+                        cv2.rectangle(frame, tuple(cnt[0]), tuple(cnt[2]), (50, 50, 50), 2)
                     clicked = key
     
     top = button_margin

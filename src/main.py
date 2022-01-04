@@ -41,7 +41,7 @@ mouseY = 0
 cubeX = -5.5
 cubeY = -0.4
 fov = 0.35
-cdist = 10
+cdist = 12
 L_click = 1
 L_click_down = 0
 consolePrevMouseY = -1
@@ -55,6 +55,15 @@ faces = {
     'D' : 3,
     'L' : 5,
     'B' : 1
+}
+
+pairs = {
+    'U' : 'D',
+    'R' : 'L',
+    'F' : 'B',
+    'D' : 'U',
+    'L' : 'R',
+    'B' : 'F'
 }
 
 def mouse(event,x,y,flags,param):
@@ -110,22 +119,32 @@ def SolveCube(cubeString):
     
     currentFace = 0
     #divides solve string to moves (letter - face) (number - multiplier) ('(' - marks the end)
-    for char in solveString:
-        if char == '(':
-            break
+    char = 0
+    while char < len(solveString):
+        inted = []
+        currentFace = []
+        br = False
+        previous = 'T'
+        for i in range(0, 2):
+            move = solveString[char:char + 2]
+            if move[0] == '(':
+                if i == 0:
+                    br = True
+                break
+            if i > 0 and pairs[move[0]] != previous:
+                break
+            inted.append(int(move[1]))
+            currentFace.append(faces[move[0]])
+            previous = move[0]
+            char += 3
             
-        if char == ' ':
-            continue
-
-        if char in faces:
-            currentFace = faces[char]
-            continue   
+        if br:
+            break
         
-        inted = int(char)
-
-        #if inted > 0 and inted < 4: #char is a number
+        #if any((x > 0 and x < 4) for x in inted): #char is a number
             #md.MoveAFace(currentFace, inted)
-        
+
+            
 
 def ScrambleCube():
     moves = 10
@@ -138,7 +157,7 @@ def ScrambleCube():
        
        if face != prevFace:
            moves = moves - 1
-           #md.MoveAFace(face, count) #0-5, 1-3
+           #md.MoveAFace([face], [count]) #0-5, 1-3
            prevFace = face
     print("scrambled!")
     
